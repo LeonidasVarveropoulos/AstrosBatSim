@@ -15,14 +15,11 @@ public class Scanner : MonoBehaviour
 
     // Stuff
     private bool start = false;
-    private int index3d = 0;
-    private Vector3 lastPos;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        scan = new double [samples3D, samples2D];
         resetScan();
         startScan();
     }
@@ -34,14 +31,24 @@ public class Scanner : MonoBehaviour
         Vector3 startPos = transform.position;
         startPos.z -= (float)laserLength / 2f;
         transform.position = startPos;
-        index3d = 0;
     }
 
     public void startScan()
     {
-        lastPos = transform.position;
+        // Moving scanner purely for visual purposes
         gameObject.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0.1f);
         start = true;
+
+        // The actual 3D scan
+        Vector3 startPos = transform.position;
+
+        for (int index = 0; index < samples3D; index++)
+        {
+
+            startPos.z += (float)laserLength / (samples3D + 1);
+            castRays(index, startPos);
+        }
+        Debug.Log(scan[50,0]);
     }
 
     public void stopScan()
@@ -50,9 +57,8 @@ public class Scanner : MonoBehaviour
         gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
     }
 
-    private void castRays()
+    private void castRays(int index3d, Vector3 startPos)
     {
-        Vector3 startPos = transform.position;
         startPos.x -= (float)laserWidth / 2f;
         for (int index=0; index < samples2D; index++)
         {
@@ -63,13 +69,13 @@ public class Scanner : MonoBehaviour
             // Does the ray intersect any objects excluding the player layer
             if (Physics.Raycast(startPos, transform.TransformDirection(Vector3.down), out hit, Mathf.Infinity, layerMask))
             {
-                Debug.DrawRay(startPos, transform.TransformDirection(Vector3.down) * hit.distance, Color.red);
+                //Debug.DrawRay(startPos, transform.TransformDirection(Vector3.down) * hit.distance, Color.red);
                 //Debug.Log("Did Hit");
-                scan[index3d, index] = hit.distance;
+                scan[index3d, index] = transform.position.y - hit.distance;
             }
             else
             {
-                Debug.DrawRay(startPos, transform.TransformDirection(Vector3.down) * 1000, Color.white);
+                //Debug.DrawRay(startPos, transform.TransformDirection(Vector3.down) * 1000, Color.white);
                 //Debug.Log("Did not Hit");
             }
         }
